@@ -16,11 +16,12 @@ pipeline {
 				}
 		}
 
+
 		stage('Push Image To Dockerhub') {
 			steps {
-				withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD']]){
+				withCredentials([usernamePassword( credentialsId: 'dockerhub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]){
 					sh '''
-						docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+						docker login -u ${USERNAME} -p ${PASSWORD}
 						docker push malassaad/capstone-blue
 					'''
 				}
