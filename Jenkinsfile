@@ -11,7 +11,7 @@ pipeline {
 		stage('Build Docker Image') {
 			steps {
 					sh '''
-						docker build -t malassaad/capstone-blue .
+						docker build -t malassaad/capstone-green .
 					'''
 				}
 		}
@@ -22,7 +22,7 @@ pipeline {
 				withCredentials([usernamePassword( credentialsId: 'dockerhub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]){
 					sh '''
 						docker login -u ${USERNAME} -p ${PASSWORD}
-						docker push malassaad/capstone-blue
+						docker push malassaad/capstone-green
 					'''
 				}
 			}
@@ -54,6 +54,32 @@ pipeline {
 				withAWS(region:'us-west-2', credentials:'ecr_credentials') {
 					sh '''
 						kubectl apply -f ./blue-service.json
+					'''
+				}
+			}
+		}
+
+		stage('Deploy green container') {
+			steps {
+				withAWS(region:'us-west-2', credentials:'ecr_credentials') {
+					sh '''
+						kubectl apply -f ./green-controller.json
+					'''
+				}
+			}
+		}
+		
+		stage('Wait user approve') {
+            steps {
+                input "Ready to redirect traffic to green?"
+            }
+        }
+
+		stage('Create the service in the cluster, redirect to green') {
+			steps {
+				withAWS(region:'us-west-2', credentials:'ecr_credentials') {
+					sh '''
+						kubectl apply -f ./green-service.json
 					'''
 				}
 			}
